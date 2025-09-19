@@ -184,6 +184,7 @@ def list_posts_from_tournament(
     }
     url = f"{API_BASE_URL}/posts/"
     response = requests.get(url, **AUTH_HEADERS, params=url_qparams)  # type: ignore
+    print(response)
     if not response.ok:
         raise Exception(response.text)
     data = json.loads(response.content)
@@ -192,10 +193,11 @@ def list_posts_from_tournament(
 
 def get_open_question_ids_from_tournament() -> list[tuple[int, int]]:
     posts = list_posts_from_tournament()
+    print(f"{len(posts)} posts")
 
     post_dict = dict()
     for post in posts["results"]:
-        logging.WARNING(f"Post: {post}")
+        print(f"Post: {post}")
         if question := post.get("question"):
             # single question post
             post_dict[post["id"]] = [question]
