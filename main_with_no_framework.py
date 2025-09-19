@@ -239,7 +239,10 @@ async def call_llm(prompt: str, model: str = "gpt-4o", temperature: float = 0.3)
     # Remove the base_url parameter to call the OpenAI API directly
     # Also checkout the package 'litellm' for one function that can call any model from any provider
     # Also checkout OpenRouter for allowing one API key for many providers (especially powerful if combined with litellm)
-    client = AsyncOpenAI()
+    client = AsyncOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.environ.get("OPENROUTER_API_KEY")
+    )
 
     async with llm_rate_limiter:
         response = await client.chat.completions.create(
