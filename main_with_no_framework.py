@@ -195,6 +195,7 @@ def get_open_question_ids_from_tournament() -> list[tuple[int, int]]:
 
     post_dict = dict()
     for post in posts["results"]:
+        logging.WARNING(f"Post: {post}")
         if question := post.get("question"):
             # single question post
             post_dict[post["id"]] = [question]
