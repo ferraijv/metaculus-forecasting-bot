@@ -92,7 +92,7 @@ def post_question_comment(post_id: int, comment_text: str) -> None:
     """
     Post a comment on the question page as the bot user.
     """
-
+    print(f"Posting Question Comment for {post_id}")
     response = requests.post(
         f"{API_BASE_URL}/comments/create/",
         json={
@@ -188,7 +188,6 @@ def list_posts_from_tournament(
     if not response.ok:
         raise Exception(response.text)
     data = json.loads(response.content)
-    print(data)
     return data
 
 
@@ -198,7 +197,6 @@ def get_open_question_ids_from_tournament() -> list[tuple[int, int]]:
 
     post_dict = dict()
     for post in posts["results"]:
-        print(f"Post: {post}")
         if question := post.get("question"):
             # single question post
             post_dict[post["id"]] = [question]
@@ -248,7 +246,6 @@ async def call_llm(prompt: str, model: str = "gpt-5", temperature: float = 0.3) 
         api_key=os.environ.get("OPENROUTER_API_KEY")
     )
 
-    print(prompt)
     async with llm_rate_limiter:
         response = await client.chat.completions.create(
             model=model,
