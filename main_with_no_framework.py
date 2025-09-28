@@ -44,7 +44,7 @@ with this file it may be worth double checking key components locally.
 ######################### CONSTANTS #########################
 # Constants
 SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
-USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
+USE_EXAMPLE_QUESTIONS = True  # set to True to forecast example questions rather than the tournament questions
 NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
 SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 
@@ -305,89 +305,6 @@ def call_perplexity(question: str) -> str:
         raise Exception(response.text)
     content = response.json()["choices"][0]["message"]["content"]
     return content
-
-def call_exa_smart_searcher(question: str) -> str:
-    if OPENAI_API_KEY is None:
-        searcher = forecasting_tools.ExaSearcher(
-            include_highlights=True,
-            num_results=10,
-        )
-        highlights = asyncio.run(searcher.invoke_for_highlights_in_relevance_order(question))
-        prioritized_highlights = highlights[:10]
-        combined_highlights = ""
-        for i, highlight in enumerate(prioritized_highlights):
-            combined_highlights += f'[Highlight {i+1}]:\nTitle: {highlight.source.title}\nURL: {highlight.source.url}\nText: "{highlight.highlight_text}"\n\n'
-        response = combined_highlights
-    else:
-        searcher = forecasting_tools.SmartSearcher(
-            temperature=0,
-            num_searches_to_run=2,
-            num_sites_per_search=10,
-        )
-        prompt = (
-            "You are an assistant to a superforecaster. The superforecaster will give"
-            "you a question they intend to forecast on. To be a great assistant, you generate"
-            "a concise but detailed rundown of the most relevant news, including if the question"
-            "would resolve Yes or No based on current information. You do not produce forecasts yourself."
-            f"\n\nThe question is: {question}"
-        )
-        response = asyncio.run(searcher.invoke(prompt))
-        assert response is not None
-
-    return response
-
-def call_asknews(question: str) -> str:
-    """
-    Use the AskNews `news` endpoint to get news context for your query.
-    The full API reference can be found here: https://docs.asknews.app/en/reference#get-/v1/news/search
-    """
-    ask = AskNewsSDK(
-        client_id=ASKNEWS_CLIENT_ID, client_secret=ASKNEWS_SECRET, scopes=set(["news"])
-    )
-
-    # get the latest news related to the query (within the past 48 hours)
-    hot_response = ask.news.search_news(
-        query=question,  # your natural language query
-        n_articles=6,  # control the number of articles to include in the context, originally 5
-        return_type="both",
-        strategy="latest news",  # enforces looking at the latest news only
-    )
-
-    # get context from the "historical" database that contains a news archive going back to 2023
-    historical_response = ask.news.search_news(
-        query=question,
-        n_articles=10,
-        return_type="both",
-        strategy="news knowledge",  # looks for relevant news within the past 60 days
-    )
-
-    hot_articles = hot_response.as_dicts
-    historical_articles = historical_response.as_dicts
-    formatted_articles = "Here are the relevant news articles:\n\n"
-
-    if hot_articles:
-        hot_articles = [article.__dict__ for article in hot_articles]
-        hot_articles = sorted(hot_articles, key=lambda x: x["pub_date"], reverse=True)
-
-        for article in hot_articles:
-            pub_date = article["pub_date"].strftime("%B %d, %Y %I:%M %p")
-            formatted_articles += f"**{article['eng_title']}**\n{article['summary']}\nOriginal language: {article['language']}\nPublish date: {pub_date}\nSource:[{article['source_id']}]({article['article_url']})\n\n"
-
-    if historical_articles:
-        historical_articles = [article.__dict__ for article in historical_articles]
-        historical_articles = sorted(
-            historical_articles, key=lambda x: x["pub_date"], reverse=True
-        )
-
-        for article in historical_articles:
-            pub_date = article["pub_date"].strftime("%B %d, %Y %I:%M %p")
-            formatted_articles += f"**{article['eng_title']}**\n{article['summary']}\nOriginal language: {article['language']}\nPublish date: {pub_date}\nSource:[{article['source_id']}]({article['article_url']})\n\n"
-
-    if not hot_articles and not historical_articles:
-        formatted_articles += "No articles were found.\n\n"
-        return formatted_articles
-
-    return formatted_articles
 
 ############### BINARY ###############
 # @title Binary prompt & functions
