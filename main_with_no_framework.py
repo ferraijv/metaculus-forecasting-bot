@@ -15,6 +15,7 @@ from asknews_sdk import AskNewsSDK
 from openai import AsyncOpenAI
 
 
+
 """
 This file provides a simple forecasting bot built from the ground up.
 We provide this for people who want to dissect
@@ -45,7 +46,7 @@ with this file it may be worth double checking key components locally.
 SUBMIT_PREDICTION = True  # set to True to publish your predictions to Metaculus
 USE_EXAMPLE_QUESTIONS = False  # set to True to forecast example questions rather than the tournament questions
 NUM_RUNS_PER_QUESTION = 5  # The median forecast is taken between NUM_RUNS_PER_QUESTION runs
-SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = False
+SKIP_PREVIOUSLY_FORECASTED_QUESTIONS = True
 
 # Environment variables
 # You only need *either* Exa or Perplexity or AskNews keys for online research
